@@ -15,6 +15,6 @@ RUN cd web-to-telegram-bot
 
 WORKDIR /web-to-telegram-bot
 
-RUN pip3 install -U -r requirements.txt
+RUN pip3 install beautifulsoup4 lxml requests schedule
 
 CMD python3 website-change-tg.py
