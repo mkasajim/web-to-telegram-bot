@@ -7,14 +7,14 @@ import bs4 as bs
 import urllib.parse
 import pymongo
 
-#### For development
+# #### For development
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-# Load the .env file
-load_dotenv()
+# # Load the .env file
+# load_dotenv()
 
-### For development
+# ### For development
 
 # Connect to MongoDB
 mongo_uri = os.getenv('DB_URI')
