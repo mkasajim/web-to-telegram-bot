@@ -7,14 +7,14 @@ import bs4 as bs
 import urllib.parse
 import pymongo
 
-# #### For development
+#### For development
 
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# # Load the .env file
-# load_dotenv()
+# Load the .env file
+load_dotenv()
 
-# ### For development
+### For development
 
 # Connect to MongoDB
 mongo_uri = os.getenv('DB_URI')
@@ -49,14 +49,38 @@ def report_change(url):
             collection.update_one({"url": url}, {"$set": {"notice": notice}})
             print("website change reported!")
             latest_notice = notice.split('\n', 1)[0]
-            print(latest_notice)
-            telegram_bot_sendtext(latest_notice)
+
+            # Extract URLs
+            list_items = soup.select(".n-body > ul > li a")
+            urls = [urllib.parse.urljoin(url, li['href']) for li in list_items]
+            
+            # # Print URLs (optional)
+            # for u in urls:
+            #     print(u)
+
+            markdown = f"[{latest_notice}]({urls[0]})"
+            print(markdown)  # Outputs: [text](url)
+            # print(latest_notice)
+            # telegram_bot_sendtext(latest_notice)
+            telegram_bot_sendtext(markdown)
         else:
             print("no change")
     else:
         latest_notice = notice.split('\n', 1)[0]
-        print(latest_notice)
-        telegram_bot_sendtext(latest_notice)
+        # print(latest_notice)
+        # Extract URLs
+        list_items = soup.select(".n-body > ul > li a")
+        urls = [urllib.parse.urljoin(url, li['href']) for li in list_items]
+        
+        # # Print URLs (optional)
+        # for u in urls:
+        #     print(u)
+
+        markdown = f"[{latest_notice}]({urls[0]})"
+        print(markdown)  # Outputs: [text](url)
+
+        # telegram_bot_sendtext(latest_notice)
+        telegram_bot_sendtext(markdown)
         print(f"no cache document for {url} found, creating one...")
         collection.insert_one({"url": url, "notice": notice})
 
