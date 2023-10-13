@@ -15,6 +15,6 @@ RUN cd web-to-telegram-bot
 
 WORKDIR /web-to-telegram-bot
 
-RUN pip3 install beautifulsoup4 lxml requests schedule
+RUN pip3 install beautifulsoup4 lxml requests schedule pymongo
 
-CMD python3 website-change-tg.py
+CMD python3 main.py
