@@ -11,10 +11,6 @@ from pymongo.mongo_client import MongoClient
 # from dotenv import load_dotenv
 # load_dotenv()
 
-# # Connect to MongoDB
-# mongo_uri = os.getenv('DB_URI')
-# # client = pymongo.MongoClient(mongo_uri)
-# client = MongoClient(mongo_uri)
 
 # Get the URI, username, and password from the environment
 uri = os.getenv('DB_URI')
