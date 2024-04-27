@@ -3,4 +3,6 @@ lxml
 requests
 schedule
 pymongo
+python-dotenv
+
 

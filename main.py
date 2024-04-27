@@ -1,93 +1,74 @@
 import requests
-import re
-import os
-import schedule
-import time
 import bs4 as bs
 import urllib.parse
+import os
 import pymongo
+import schedule
+import time
+from pymongo.mongo_client import MongoClient
 
-# #### For development
+# Load the .env file during development
+from dotenv import load_dotenv
+load_dotenv()
 
-# from dotenv import load_dotenv
+# # Connect to MongoDB
+# mongo_uri = os.getenv('DB_URI')
+# # client = pymongo.MongoClient(mongo_uri)
+# client = MongoClient(mongo_uri)
 
-# # Load the .env file
-# load_dotenv()
+# Get the URI, username, and password from the environment
+uri = os.getenv('DB_URI')
+username = os.getenv('DB_USERNAME')
+password = os.getenv('DB_PASSWORD')
 
-# ### For development
-
-# Connect to MongoDB
-mongo_uri = os.getenv('DB_URI')
-client = pymongo.MongoClient(mongo_uri)
-db = client['url_changes']  # database name
-collection = db['url_data']  # collection name
+# Create a new client and connect to the server with authentication
+client = MongoClient(uri, username=username, password=password)
+db = client['url_changes']  # Database name
+collection = db['url_data']  # Collection name
 
 # Send a message via a telegram bot
 def telegram_bot_sendtext(bot_message):
     bot_token = os.getenv('BOT_TOKEN')
     bot_chatID = os.getenv('CHAT_ID')
-    message = bot_message
-    params = {'text': message}
+    params = {'text': bot_message}
     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&' + urllib.parse.urlencode(params)
-
     response = requests.get(send_text)
-
     return response.json()
 
 def report_change(url):
-    html_response = (requests.get(url)).text
-    soup = bs.BeautifulSoup(html_response,'lxml')
-    txt = soup.select_one(".n-body > ul").get_text()
-    notice = (re.sub(r'\n\s*\n', '\n', txt)).strip()
+    response = requests.get(url)
+    soup = bs.BeautifulSoup(response.text, 'lxml')
 
-    # Check if MongoDB document exists for the given URL
-    document = collection.find_one({"url": url})
+    # Find the first li element in the quick-links section
+    li_element = soup.select_one(".qiick-links > ul > li")
+    if li_element:
+        date = li_element.find("span", class_="neWs_date").get_text(strip=True)
+        notice_text = li_element.find("h5").get_text(strip=True)
+        notice_url = li_element.find("a")['href']
+        full_url = urllib.parse.urljoin(url, notice_url)
+        markdown = f"Date: {date}\nNews: [{notice_text}]({full_url})"
 
-    if document:
-        cached_notice = document['notice']
-        if notice != cached_notice:
-            collection.update_one({"url": url}, {"$set": {"notice": notice}})
-            print("website change reported!")
-            latest_notice = notice.split('\n', 1)[0]
+        # Check if MongoDB document exists for the given URL
+        document = collection.find_one({"url": url})
 
-            # Extract URLs
-            list_items = soup.select(".n-body > ul > li a")
-            urls = [urllib.parse.urljoin(url, li['href']) for li in list_items]
-            
-            # # Print URLs (optional)
-            # for u in urls:
-            #     print(u)
-
-            markdown = f"[{latest_notice}]({urls[0]})"
-            print(markdown)  # Outputs: [text](url)
-            # print(latest_notice)
-            # telegram_bot_sendtext(latest_notice)
-            telegram_bot_sendtext(markdown)
+        if document:
+            cached_notice = document['notice']
+            if markdown != cached_notice:
+                collection.update_one({"url": url}, {"$set": {"notice": markdown}})
+                print("Website change reported!")
+                telegram_bot_sendtext(markdown)
+            else:
+                print("No change")
         else:
-            print("no change")
+            print(f"No cache document for {url} found, creating one...")
+            collection.insert_one({"url": url, "notice": markdown})
+            telegram_bot_sendtext(markdown)
     else:
-        latest_notice = notice.split('\n', 1)[0]
-        # print(latest_notice)
-        # Extract URLs
-        list_items = soup.select(".n-body > ul > li a")
-        urls = [urllib.parse.urljoin(url, li['href']) for li in list_items]
-        
-        # # Print URLs (optional)
-        # for u in urls:
-        #     print(u)
-
-        markdown = f"[{latest_notice}]({urls[0]})"
-        print(markdown)  # Outputs: [text](url)
-
-        # telegram_bot_sendtext(latest_notice)
-        telegram_bot_sendtext(markdown)
-        print(f"no cache document for {url} found, creating one...")
-        collection.insert_one({"url": url, "notice": notice})
+        print("No valid notice found at the provided URL.")
 
 def scan_url():
     with open("urls.txt") as urls_file:
-        urls_list = urls_file.readlines()
-    urls_list = [x.strip() for x in urls_list]
+        urls_list = [x.strip() for x in urls_file.readlines()]
     
     for url in urls_list:
         report_change(url)

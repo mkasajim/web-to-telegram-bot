@@ -8,13 +8,14 @@ def report_change(url):
     soup = bs.BeautifulSoup(html_response,'lxml')
 
     # Extract text
-    txt = soup.select_one(".n-body > ul").get_text()
+    txt = soup.select_one(".qiick-links > ul").get_text()
     notice = (re.sub(r'\n\s*\n', '\n', txt)).strip()
     # print(notice)
     latest_notice = notice.split('\n', 1)[0]
 
     # Extract URLs
-    list_items = soup.select(".n-body > ul > li a")
+    list_items = soup.select(".qiick-links > ul > li a")
+    # print(latest_notice)
     urls = [urllib.parse.urljoin(url, li['href']) for li in list_items]
     
     # # Print URLs (optional)

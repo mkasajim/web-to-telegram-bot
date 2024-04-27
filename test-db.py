@@ -1,12 +1,17 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from urllib.parse import quote_plus
 import os
 from dotenv import load_dotenv
 
 # Load the .env file
 load_dotenv()
 
+username = "sandipan"
+password = "k_S6BCM7NK2VwYc"
+
 # Get the URI from the environment
+DB_URI = f"mongodb+srv://sandipan:{password}@web-to-tg.0ozaqoa.mongodb.net/?retryWrites=true&w=majority&appName=web-to-tg"
 uri = os.getenv('DB_URI')
 
 # Create a new client and connect to the server
