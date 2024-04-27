@@ -8,8 +8,8 @@ import time
 from pymongo.mongo_client import MongoClient
 
 # Load the .env file during development
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # # Connect to MongoDB
 # mongo_uri = os.getenv('DB_URI')

@@ -7,3 +7,5 @@ Variable:
 1. `CHAT_ID` with your personal/group chatid
 2. `BOT_TOKEN` with your telegram bot token
 3. `DB_URI` with your mongo db uri
+4. `DB_USERNAME`
+5. `DB_PASSWORD`
